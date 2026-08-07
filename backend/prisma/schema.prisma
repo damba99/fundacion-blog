@@ -1,0 +1,73 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Admin {
+  id           String    @id @default(cuid())
+  usuario      String    @unique
+  passwordHash String
+  fechaCreacion DateTime @default(now())
+  ultimoLogin  DateTime?
+
+  @@map("admins")
+}
+
+model Usuario {
+  id                   String     @id // IP del usuario
+  nombre               String
+  bloqueado            Boolean    @default(false)
+  fechaPrimerRegistro  DateTime   @default(now())
+  fechaUltimaActividad DateTime   @updatedAt
+  comentarios          Comentario[]
+
+  @@map("usuarios")
+}
+
+model Categoria {
+  id       String    @id @default(cuid())
+  nombre   String    @unique
+  slug     String    @unique
+  noticias Noticia[]
+
+  @@map("categorias")
+}
+
+model Noticia {
+  id                String      @id @default(cuid())
+  titulo            String
+  slug              String      @unique
+  contenido         String
+  imagen            String?
+  epigrafeImagen    String?
+  categoriaId       String?
+  categoria         Categoria?  @relation(fields: [categoriaId], references: [id], onDelete: SetNull)
+  destacadaHome     Boolean     @default(false)
+  publicada         Boolean     @default(true)
+  fechaCreacion     DateTime    @default(now())
+  fechaActualizacion DateTime   @updatedAt
+  comentarios       Comentario[]
+
+  @@map("noticias")
+}
+
+model Comentario {
+  id             String   @id @default(cuid())
+  noticiaId      String
+  noticia        Noticia  @relation(fields: [noticiaId], references: [id], onDelete: Cascade)
+  usuarioId      String
+  usuario        Usuario  @relation(fields: [usuarioId], references: [id])
+  nombreMostrado String
+  contenido      String
+  aprobado       Boolean  @default(false)
+  fechaCreacion  DateTime @default(now())
+
+  @@map("comentarios")
+}
